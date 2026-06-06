@@ -1,0 +1,49 @@
+{
+  "name": "chatbot-widget",
+  "version": "0.1.0",
+  "description": "Embeddable React chatbot widget — floating launcher, panel, message list, input.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Viprasol Tech Private Limited",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Viprasol-Tech/chatbot-widget.git"
+  },
+  "homepage": "https://viprasol.com",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "chatbot",
+    "chat-widget",
+    "react",
+    "typescript",
+    "ui-components",
+    "support",
+    "embeddable"
+  ],
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.0.1",
+    "@types/node": "^22.7.4",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.2"
+  }
+}
