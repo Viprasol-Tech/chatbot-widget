@@ -1,5 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { appendMessage, createMessageId, formatTime, isSendable } from "./helpers.js";
+import {
+  appendMessage,
+  countUnread,
+  createMessageId,
+  formatTime,
+  isInFlight,
+  isSendable,
+  updateMessage,
+} from "./helpers.js";
 import type { ChatMessage } from "./types.js";
 
 describe("appendMessage", () => {
@@ -52,5 +60,58 @@ describe("isSendable", () => {
   it("is true when there is real content", () => {
     expect(isSendable("hi")).toBe(true);
     expect(isSendable("  padded  ")).toBe(true);
+  });
+});
+
+describe("appendMessage extras", () => {
+  it("attaches status and quick replies when provided", () => {
+    const next = appendMessage([], "bot", "hi", 5, {
+      status: "streaming",
+      quickReplies: [{ id: "q1", label: "Yes" }],
+    });
+    expect(next[0]).toMatchObject({ status: "streaming" });
+    expect(next[0].quickReplies).toHaveLength(1);
+  });
+});
+
+describe("updateMessage", () => {
+  it("patches only the matching message without mutating the list", () => {
+    const a = appendMessage([], "bot", "", 1, { status: "streaming" });
+    const id = a[0].id;
+    const b = updateMessage(a, id, { text: "grown", status: "complete" });
+    expect(a[0].text).toBe("");
+    expect(b[0]).toMatchObject({ text: "grown", status: "complete" });
+  });
+
+  it("returns an equivalent list when no id matches", () => {
+    const a = appendMessage([], "user", "x", 1);
+    const b = updateMessage(a, "missing", { text: "no" });
+    expect(b.map((m) => m.text)).toEqual(["x"]);
+  });
+});
+
+describe("countUnread", () => {
+  const base: ChatMessage[] = [
+    { id: "1", role: "user", text: "u", timestamp: 100 },
+    { id: "2", role: "bot", text: "old", timestamp: 100 },
+    { id: "3", role: "bot", text: "new", timestamp: 200, status: "complete" },
+    { id: "4", role: "bot", text: "typing", timestamp: 300, status: "streaming" },
+  ];
+
+  it("counts only completed bot messages at or after `since`", () => {
+    expect(countUnread(base, 150)).toBe(1);
+  });
+
+  it("counts nothing when since is in the future", () => {
+    expect(countUnread(base, 9999)).toBe(0);
+  });
+});
+
+describe("isInFlight", () => {
+  it("is true for sending/streaming and false otherwise", () => {
+    expect(isInFlight("sending")).toBe(true);
+    expect(isInFlight("streaming")).toBe(true);
+    expect(isInFlight("complete")).toBe(false);
+    expect(isInFlight(undefined)).toBe(false);
   });
 });

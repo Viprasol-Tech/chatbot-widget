@@ -1,4 +1,4 @@
-import type { ChatMessage, MessageRole } from "./types.js";
+import type { ChatMessage, MessageRole, MessageStatus } from "./types.js";
 
 let counter = 0;
 
@@ -22,14 +22,54 @@ export function appendMessage(
   role: MessageRole,
   text: string,
   timestamp: number = Date.now(),
+  extra: Partial<Pick<ChatMessage, "status" | "quickReplies">> = {},
 ): ChatMessage[] {
   const message: ChatMessage = {
     id: createMessageId(),
     role,
     text,
     timestamp,
+    ...extra,
   };
   return [...messages, message];
+}
+
+/**
+ * Return a new list with the message matching `id` shallow-merged with
+ * `patch`. The input list and all other messages are left untouched. Used
+ * to grow a streaming bot reply in place.
+ */
+export function updateMessage(
+  messages: readonly ChatMessage[],
+  id: string,
+  patch: Partial<Omit<ChatMessage, "id">>,
+): ChatMessage[] {
+  return messages.map((message) =>
+    message.id === id ? { ...message, ...patch } : message,
+  );
+}
+
+/**
+ * Count messages that should contribute to the unread badge: bot messages
+ * created at or after `since` (the moment the panel was last opened).
+ * Pending/error placeholders are ignored.
+ */
+export function countUnread(
+  messages: readonly ChatMessage[],
+  since: number,
+): number {
+  return messages.filter(
+    (m) =>
+      m.role === "bot" &&
+      m.timestamp >= since &&
+      m.status !== "sending" &&
+      m.status !== "streaming",
+  ).length;
+}
+
+/** True when a status represents an in-flight (not yet settled) message. */
+export function isInFlight(status: MessageStatus | undefined): boolean {
+  return status === "sending" || status === "streaming";
 }
 
 /**
